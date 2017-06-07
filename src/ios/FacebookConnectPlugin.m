@@ -294,17 +294,17 @@
     NSSet *grantedPermissions = [FBSDKAccessToken currentAccessToken].permissions;
 
     for (NSString *value in permissions) {
-    	NSLog(@"Checking permission %@.", value);
+        NSLog(@"Checking permission %@.", value);
         if (![grantedPermissions containsObject:value]) { //checks if permissions does not exists
             CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
-            												 messageAsString:@"A permission has been denied"];
+                                                             messageAsString:@"A permission has been denied"];
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
             return;
         }
     }
     
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
-    												 messageAsString:@"All permissions have been accepted"];
+                                                     messageAsString:@"All permissions have been accepted"];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     return;
 }
@@ -379,13 +379,13 @@
         dialog.delegate = self;
         // Adopt native share sheets with the following line
         if (params[@"share_sheet"]) {
-        	dialog.mode = FBSDKShareDialogModeShareSheet;
+            dialog.mode = FBSDKShareDialogModeShareSheet;
         } else if (params[@"share_feedBrowser"]) {
-        	dialog.mode = FBSDKShareDialogModeFeedBrowser;
+            dialog.mode = FBSDKShareDialogModeFeedBrowser;
         } else if (params[@"share_native"]) {
-        	dialog.mode = FBSDKShareDialogModeNative;
+            dialog.mode = FBSDKShareDialogModeNative;
         } else if (params[@"share_feedWeb"]) {
-        	dialog.mode = FBSDKShareDialogModeFeedWeb;
+            dialog.mode = FBSDKShareDialogModeFeedWeb;
         }
 
         [dialog show];
