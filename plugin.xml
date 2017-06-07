@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android"
-        id="cordova-plugin-facebook4"
+        id="cordova-plugin-facebook4-multi"
         version="1.9.1">
 
     <name>Facebook Connect</name>
@@ -13,8 +13,6 @@
       Cordova application as you use in your web application.
     </description>
         
-    <repo>https://github.com/jeduan/cordova-plugin-facebook4</repo>
-
     <license>Apache 2.0</license>
 
     <preference name="APP_ID" />
@@ -98,14 +96,21 @@
         </config-file>
 
         <config-file target="*-Info.plist" parent="CFBundleURLTypes">
-          <array>
-            <dict>
-              <key>CFBundleURLSchemes</key>
-              <array>
-                <string>fb$APP_ID</string>
-              </array>
-            </dict>
-          </array>
+            <array>
+                <dict>
+                    <key>CFBundleURLSchemes</key>
+                    <array>
+                        <string>fb$APP_ID</string>
+                    </array>
+                </dict>
+                <!-- Favi.sk facebook -->
+                <dict>
+                    <key>CFBundleURLSchemes</key>
+                    <array>
+                        <string>fb1764283150555127</string>
+                    </array>
+                </dict>
+            </array>
         </config-file>
 
         <config-file target="*-Info.plist" parent="NSAppTransportSecurity">

@@ -12,8 +12,12 @@ exports.login = function login (permissions, s, f) {
   exec(s, f, 'FacebookConnectPlugin', 'login', permissions)
 }
 
-exports.checkHasCorrectPermissions = function checkHasCorrectPermissions (permissions, s, f) {
-  exec(s, f, 'FacebookConnectPlugin', 'checkHasCorrectPermissions', permissions)
+exports.newAccessToken = function newAccessToken(permissions, s, f) {
+    exec(s, f, 'FacebookConnectPlugin', 'newAccessToken', permissions)
+}
+
+exports.checkHasCorrectPermissions = function checkHasCorrectPermissions(permissions, s, f) {
+    exec(s, f, 'FacebookConnectPlugin', 'checkHasCorrectPermissions', permissions)
 }
 
 exports.logEvent = function logEvent (name, params, valueToSum, s, f) {
@@ -49,6 +53,10 @@ exports.api = function api (graphPath, permissions, s, f) {
 exports.appInvite = function appLinks (options, s, f) {
   options = options || {}
   exec(s, f, 'FacebookConnectPlugin', 'appInvite', [options])
+}
+exports.init = function appLinks(appIds, s, f) {
+    appIds = appIds || [];
+    exec(s, f, 'FacebookConnectPlugin', 'init', appIds)
 }
 
 exports.getDeferredApplink = function (s, f) {

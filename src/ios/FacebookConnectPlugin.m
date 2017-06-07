@@ -133,6 +133,88 @@
     [self.commandDelegate sendPluginResult:res callbackId:command.callbackId];
 }
 
+
+- (void) newAccessToken:(CDVInvokedUrlCommand *)command {
+     NSLog(@"Starting new Access Token");
+    CDVPluginResult *pluginResult;
+    NSArray *permissions = nil;
+    
+    if ([command.arguments count] > 0) {
+        permissions = command.arguments;
+    }
+
+    // Store the previous accesToken to have the main appId accessToken set after the new login
+    // and still have the user connected
+
+    FBSDKAccessToken *accesToken = [FBSDKAccessToken currentAccessToken];
+    // this will prevent from being unable to login after updating plugin or changing permissions
+    // without refreshing there will be a cache problem. This simple call should fix the problems
+    [FBSDKAccessToken refreshCurrentAccessToken:nil];
+
+    if ([FBSDKAccessToken currentAccessToken]) {
+        // Close the session and clear the cache
+        if (self.loginManager == nil) {
+            self.loginManager = [[FBSDKLoginManager alloc] init];
+        }
+        
+        [self.loginManager logOut];
+    }
+    
+    FBSDKLoginManagerRequestTokenHandler loginHandler = ^void(FBSDKLoginManagerLoginResult *result, NSError *error) {
+        if (error) {
+            // If the SDK has a message for the user, surface it.
+            NSString *errorMessage = error.userInfo[FBSDKErrorLocalizedDescriptionKey] ?: @"There was a problem logging you in.";
+            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                                                              messageAsString:errorMessage];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+            return;
+        } else if (result.isCancelled) {
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                                                              messageAsString:@"User cancelled."];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        } else {
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
+                                                          messageAsDictionary:[self responseObject]];
+            // set the first accessToken (Main appId)
+            if(accesToken != nil) [FBSDKAccessToken  setCurrentAccessToken:accesToken];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        }
+    };
+    
+    // Check if the session is open or not
+    if ([FBSDKAccessToken currentAccessToken] == nil) {
+        // Initial log in, can only ask to read
+        // type permissions
+        if (permissions == nil) {
+            permissions = @[];
+        }
+        if (! [self areAllPermissionsReadPermissions:permissions]) {
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                                             messageAsString:@"You can only ask for read permissions initially"];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+            return;
+        }
+        
+        if (self.loginManager == nil) {
+            self.loginManager = [[FBSDKLoginManager alloc] init];
+        }
+        [self.loginManager logInWithReadPermissions:permissions fromViewController:[self topMostController] handler:loginHandler];
+        return;
+    }
+    
+    
+    if (permissions == nil) {
+        // We need permissions
+        NSString *permissionsErrorMessage = @"No permissions specified at login";
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                                         messageAsString:permissionsErrorMessage];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        return;
+    }
+    
+    [self loginWithPermissions:permissions withHandler:loginHandler];
+}
+
 - (void)login:(CDVInvokedUrlCommand *)command {
     NSLog(@"Starting login");
     CDVPluginResult *pluginResult;
@@ -209,7 +291,7 @@
         permissions = command.arguments;
     }
     
-    NSSet *grantedPermissions = [FBSDKAccessToken currentAccessToken].permissions; 
+    NSSet *grantedPermissions = [FBSDKAccessToken currentAccessToken].permissions;
 
     for (NSString *value in permissions) {
     	NSLog(@"Checking permission %@.", value);
@@ -506,6 +588,20 @@
         result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
         [self.commandDelegate sendPluginResult:result callbackId:self.dialogCallbackId];
     }
+}
+
+- (void) init:(CDVInvokedUrlCommand *) command
+{   
+    // set a new appId for the facebookPlugin 
+    NSString *data_id = [command.arguments objectAtIndex:0];
+    
+    [FBSDKAppEvents setLoggingOverrideAppID:data_id];
+    [FBSDKSettings setAppID:data_id];
+
+    CDVPluginResult *pluginResult;
+    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
+                                                          messageAsString:data_id];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
 }
 

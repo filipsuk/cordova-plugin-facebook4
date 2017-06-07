@@ -79,6 +79,7 @@ public class ConnectPlugin extends CordovaPlugin {
     private GameRequestDialog gameRequestDialog;
     private AppInviteDialog appInviteDialog;
     private MessageDialog messageDialog;
+    private AccessToken accessTokenNew;
 
     @Override
     protected void pluginInitialize() {
@@ -117,8 +118,19 @@ public class ConnectPlugin extends CordovaPlugin {
 
                         if (loginContext != null) {
                             Log.d(TAG, "returning login object " + jsonObject.toString());
-                            loginContext.success(getResponse());
-                            loginContext = null;
+
+                            if(accessTokenNew != null){
+                                // set the first accessToken (Main appId)
+                                final AccessToken accessToken = AccessToken.getCurrentAccessToken();
+                                LoginManager.getInstance().logOut();
+                                AccessToken.setCurrentAccessToken(accessTokenNew);
+                                loginContext.success(accessToken.getToken()); 
+                                loginContext = null;
+                            }
+                            else{
+                                loginContext.success(getResponse());
+                                loginContext = null;
+                            }
                         }
                     }
                 }).executeAsync();
@@ -281,7 +293,23 @@ public class ConnectPlugin extends CordovaPlugin {
             executeLogin(args, callbackContext);
             return true;
 
-        } else if (action.equals("logout")) {
+        }
+        
+        else if (action.equals("init")) {
+            executeInit(args, callbackContext);
+            return true;
+
+        }
+
+        else if (action.equals("newAccessToken")) {
+             // Store the previous accesToken to have the main appId accessToken set after the new login
+            // and still have the user connected
+            accessTokenNew = AccessToken.getCurrentAccessToken();
+            LoginManager.getInstance().logOut();
+            executeLogin(args, callbackContext);
+            return true;
+        }    
+         else if (action.equals("logout")) {
             if (hasAccessToken()) {
                 LoginManager.getInstance().logOut();
                 callbackContext.success();
@@ -724,6 +752,16 @@ public class ConnectPlugin extends CordovaPlugin {
             callbackContext.success();
         }
     }
+
+    private void executeInit(JSONArray args, CallbackContext callbackContext) throws JSONException {
+       String appId = args.getString(0);
+       FacebookSdk.setApplicationId(appId);
+       AppEventsLogger.activateApp(cordova.getActivity().getApplicationContext(),appId);
+       PluginResult pr = new PluginResult(PluginResult.Status.OK, appId);
+       callbackContext.sendPluginResult(pr);
+    }
+
+    
 
     private void executeLogin(JSONArray args, CallbackContext callbackContext) throws JSONException {
         Log.d(TAG, "login FB");
